@@ -24,6 +24,8 @@ COLORS = {
 CELL_SIZE = 50
 MAX_COLS = 10
 MAX_ROWS = 20
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 1100
 
 is_running = True
 grid = [[None for y in range(MAX_ROWS + 2)] for x in range(MAX_COLS)]
@@ -45,16 +47,16 @@ def onKeyPressed(e):
     redraw()
 
 tf = TurtleFrame(mousePressed = onMousePressed, keyPressed = onKeyPressed)
-Options.setPlaygroundSize(500, 1100)
+Options.setPlaygroundSize(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 def world_to_grid_coords(x, y):
-    grid_x = int((x - -250) / CELL_SIZE)
-    grid_y = int((y - -550) / CELL_SIZE)
+    grid_x = int((x - -(SCREEN_WIDTH/2)) / CELL_SIZE)
+    grid_y = int((y - -(SCREEN_HEIGHT/2)) / CELL_SIZE)
     return (grid_x, grid_y)
 
 def grid_to_world_coords(x, y):
-    world_x = (x * CELL_SIZE) + -250
-    world_y = (y * CELL_SIZE) + -550
+    world_x = (x * CELL_SIZE) + -(SCREEN_WIDTH/2)
+    world_y = (y * CELL_SIZE) + -(SCREEN_HEIGHT/2)
     return (world_x, world_y)
 
 def check_lines():
@@ -147,8 +149,8 @@ class Grid(Turtle):
         self.speed(-1)
         
     def draw(self):
-        start_x = -(500/2)
-        start_y = -(1100/2)
+        start_x = -((SCREEN_WIDTH/2))
+        start_y = -((SCREEN_HEIGHT/2))
         
         for row in range(MAX_ROWS + 1):
             for collumn in range(MAX_COLS + 1):
