@@ -24,8 +24,8 @@ COLORS = {
 CELL_SIZE = 50
 MAX_COLS = 10
 MAX_ROWS = 20
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 1100
+SCREEN_WIDTH = MAX_COLS * CELL_SIZE
+SCREEN_HEIGHT = (MAX_ROWS + 2) * CELL_SIZE
 
 is_running = True
 grid = [[None for y in range(MAX_ROWS + 2)] for x in range(MAX_COLS)]
@@ -105,7 +105,7 @@ class Block(Turtle):
             target_world_y = self.py + (shape_y * CELL_SIZE) + (dy * CELL_SIZE)
             target_grid_x, target_grid_y = world_to_grid_coords(target_world_x, target_world_y)
 
-            if target_grid_x < 0 or target_grid_x > 9:
+            if target_grid_x < 0 or target_grid_x >= MAX_COLS:
                 return
             if target_grid_y < 0:
                 self.place()
@@ -136,7 +136,7 @@ class Block(Turtle):
             grid[grid_x][grid_y] = self.color_id
             
         check_lines()
-        block = Block(tf, 4, 20, random.randint(0, 6))
+        block = Block(tf, MAX_COLS / 2, MAX_ROWS, random.randint(0, 6))
         
     def clear_all(self):
         block.clear()
@@ -179,10 +179,10 @@ def redraw():
     grid_visuals.draw()
     
 grid_visuals = Grid(tf)
-block = Block(tf, 4, 20, random.randint(0, 6))
+block = Block(tf, MAX_COLS / 2, MAX_ROWS, random.randint(0, 6))
 redraw()
 
 while is_running:
+    delay(500)
     block.move(0, -1)
     redraw()
-    delay(500)
