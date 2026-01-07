@@ -249,7 +249,7 @@ class GameMenu(Turtle):
             self.setPos(SCREEN_WIDTH / 2 - 170, SCREEN_HEIGHT / 3)
             self.label("Game Over!")
             self.setPos(SCREEN_WIDTH / 2 - 190, SCREEN_HEIGHT / 3 - 30)
-            self.label("Press ENTER to restart")
+            self.label("ENTER to restart")
         
 def redraw():
     block.clear_all()
