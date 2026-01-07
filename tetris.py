@@ -170,14 +170,14 @@ class Block(Turtle):
             if grid_y + 1 > MAX_ROWS:
                 is_running = False
                 redraw()
-            
+                
         if not is_running:
             return
         check_lines()
         block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
         
     def clear_all(self):
-        self.clear()
+        block.clear()
         
 class Grid(Turtle):
     def __init__(self, tf):
