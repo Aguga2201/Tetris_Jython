@@ -13,12 +13,12 @@ SHAPES = {
 
 COLORS = {
     0: "cyan",
-    1: "yellow",
-    2: "purple",
-    3: "green",
-    4: "red",
-    5: "orange",
-    6: "blue"
+    1: "blue",
+    2: "orange",
+    3: "yellow",
+    4: "green",
+    5: "purple",
+    6: "red"
 }
 
 CELL_SIZE = 50
