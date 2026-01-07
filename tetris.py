@@ -32,9 +32,10 @@ is_running = True
 score = 0
 grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
 random_bag = []
+next_piece_id = None
 
 def onMousePressed(e):
-    if is_running: 
+    if is_running:
         block.rotate()
         redraw()
     
@@ -65,11 +66,14 @@ def grid_to_world_coords(x, y):
     return (world_x, world_y)
 
 def get_next_piece():
-    global random_bag
+    global random_bag, next_piece_id
     if len(random_bag) == 0:
         random_bag = [0, 1, 2, 3, 4, 5, 6]
         random.shuffle(random_bag)
-    return random_bag.pop()
+    
+    current_piece = next_piece_id if next_piece_id is not None else random_bag.pop()
+    next_piece_id = random_bag.pop()
+    return current_piece
 
 def check_lines():
     global score
@@ -92,12 +96,13 @@ def check_lines():
             check_lines()
 
 def reset_game():
-    global is_running, score, grid, random_bag, block
+    global is_running, score, grid, random_bag, block, next_piece_id
     
     is_running = True
     score = 0
     grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
     random_bag = []
+    next_piece_id = None
     
     block.clear_all()
     
@@ -114,7 +119,7 @@ class Block(Turtle):
         self.px, self.py = x, y
         self.shape = SHAPES[shape]
         self.shape_id = shape
-        self.color_id = random.randint(0,6)
+        self.color_id = shape
         self.setFillColor(COLORS[self.color_id])
 
     def draw(self):
@@ -133,7 +138,7 @@ class Block(Turtle):
             target_grid_x = self.px + shape_x + dx
             target_grid_y = self.py + shape_y + dy
 
-            if target_grid_x < 0 or target_grid_x >= MAX_COLS:  
+            if target_grid_x < 0 or target_grid_x >= MAX_COLS:
                 return
             if target_grid_y < 0:
                 self.place()
@@ -147,7 +152,7 @@ class Block(Turtle):
         
     def rotate(self):
         offset = 0
-        if self.shape_id == 3:
+        if self.shape_id == 3: 
             offset = 1
         elif self.shape_id == 0:
             offset = -1
@@ -165,14 +170,14 @@ class Block(Turtle):
             if grid_y + 1 > MAX_ROWS:
                 is_running = False
                 redraw()
-                
+            
         if not is_running:
             return
         check_lines()
         block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
         
     def clear_all(self):
-        block.clear()
+        self.clear()
         
 class Grid(Turtle):
     def __init__(self, tf):
@@ -195,7 +200,7 @@ class Grid(Turtle):
                 
         for x in range(MAX_COLS):
             for y in range(MAX_ROWS + SPAWN_ROWS):
-                if grid[x][y] is not None:
+                if grid[x][y] is not None: 
                     self.setFillColor(COLORS[grid[x][y]])
                     world_x, world_y = grid_to_world_coords(x, y)
                     self.setPos(world_x, world_y)
@@ -220,17 +225,37 @@ class GameMenu(Turtle):
         self.setPos(SCREEN_WIDTH / 2 - 160, SCREEN_HEIGHT / 6)
         self.label("Next piece:")
         
+        if next_piece_id is not None:
+            preview_shape = SHAPES[next_piece_id]
+            preview_color = COLORS[next_piece_id]
+            self.setFillColor(preview_color)
+            
+            preview_scale = 25
+            preview_center_x = SCREEN_WIDTH / 2 - 125
+            preview_center_y = SCREEN_HEIGHT / 6 - 100
+            
+            for dx, dy in preview_shape: 
+                x = preview_center_x + (dx * preview_scale)
+                y = preview_center_y + (dy * preview_scale)
+                
+                self.setPos(x, y)
+                self.startPath()
+                for i in range(4):
+                    self.forward(preview_scale)
+                    self.right(90)
+                self.fillPath()
+        
         if is_running == False:
             self.setPos(SCREEN_WIDTH / 2 - 170, SCREEN_HEIGHT / 3)
             self.label("Game Over!")
             self.setPos(SCREEN_WIDTH / 2 - 190, SCREEN_HEIGHT / 3 - 30)
-            self.label("ENTER to restart")
+            self.label("Press ENTER to restart")
         
 def redraw():
     block.clear_all()
     
     grid_visuals.draw()
-    if is_running:
+    if is_running: 
         block.draw()
     game_menu.draw()
     
