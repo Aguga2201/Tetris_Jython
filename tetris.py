@@ -58,9 +58,9 @@ def grid_to_world_coords(x, y):
 def get_next_piece():
     global random_bag
     if len(random_bag) == 0:
-        bag = [0, 1, 2, 3, 4, 5, 6]
-        random.shuffle(bag)
-    return bag.pop()
+        random_bag = [0, 1, 2, 3, 4, 5, 6]
+        random.shuffle(random_bag)
+    return random_bag.pop()
 
 def check_lines():
     for y in range(MAX_ROWS + 1):
