@@ -29,6 +29,7 @@ SCREEN_HEIGHT = (MAX_ROWS + 2) * CELL_SIZE
 
 is_running = True
 grid = [[None for y in range(MAX_ROWS + 2)] for x in range(MAX_COLS)]
+random_bag = []
 
 def onMousePressed(e):
     block.rotate()
@@ -49,15 +50,17 @@ def onKeyPressed(e):
 tf = TurtleFrame(mousePressed = onMousePressed, keyPressed = onKeyPressed)
 Options.setPlaygroundSize(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-def world_to_grid_coords(x, y):
-    grid_x = int((x - -(SCREEN_WIDTH/2)) / CELL_SIZE)
-    grid_y = int((y - -(SCREEN_HEIGHT/2)) / CELL_SIZE)
-    return (grid_x, grid_y)
-
 def grid_to_world_coords(x, y):
     world_x = (x * CELL_SIZE) + -(SCREEN_WIDTH/2)
     world_y = (y * CELL_SIZE) + -(SCREEN_HEIGHT/2)
     return (world_x, world_y)
+
+def get_next_piece():
+    global random_bag
+    if len(random_bag) == 0:
+        bag = [0, 1, 2, 3, 4, 5, 6]
+        random.shuffle(bag)
+    return bag.pop()
 
 def check_lines():
     for y in range(MAX_ROWS + 1):
@@ -82,7 +85,7 @@ class Block(Turtle):
         self.hideTurtle()
         self.setPenColor("black")
         self.speed(-1)
-        self.px, self.py = grid_to_world_coords(x, y)
+        self.px, self.py = x, y
         self.shape = SHAPES[shape]
         self.shape_id = shape
         self.color_id = random.randint(0,6)
@@ -90,8 +93,8 @@ class Block(Turtle):
 
     def draw(self):
         for dx, dy in self.shape:
-            self.setPos(self.px + dx * CELL_SIZE,
-                        self.py + dy * CELL_SIZE)
+            world_x, world_y = grid_to_world_coords(self.px + dx, self.py + dy)
+            self.setPos(world_x, world_y)
             self.setHeading(0)
             self.startPath()
             for i in range(4):
@@ -100,12 +103,11 @@ class Block(Turtle):
             self.fillPath()
 
     def move(self, dx, dy):
-        for shape_x, shape_y in self.shape:
-            target_world_x = self.px + (shape_x * CELL_SIZE) + (dx * CELL_SIZE)
-            target_world_y = self.py + (shape_y * CELL_SIZE) + (dy * CELL_SIZE)
-            target_grid_x, target_grid_y = world_to_grid_coords(target_world_x, target_world_y)
+        for shape_x, shape_y in self. shape:
+            target_grid_x = self.px + shape_x + dx
+            target_grid_y = self.py + shape_y + dy
 
-            if target_grid_x < 0 or target_grid_x >= MAX_COLS:
+            if target_grid_x < 0 or target_grid_x >= MAX_COLS: 
                 return
             if target_grid_y < 0:
                 self.place()
@@ -114,8 +116,8 @@ class Block(Turtle):
                 if dy != 0:
                     self.place()
                 return
-        self.px += dx * CELL_SIZE
-        self.py += dy * CELL_SIZE
+        self.px += dx
+        self.py += dy
         
     def rotate(self):
         offset = 0
@@ -130,13 +132,12 @@ class Block(Turtle):
         global block
         
         for shape_x, shape_y in self.shape:
-            world_x = self.px + (shape_x * CELL_SIZE)
-            world_y = self.py + (shape_y * CELL_SIZE)
-            grid_x, grid_y = world_to_grid_coords(world_x, world_y)
+            grid_x = self.px + shape_x
+            grid_y = self.py + shape_y
             grid[grid_x][grid_y] = self.color_id
             
         check_lines()
-        block = Block(tf, MAX_COLS / 2, MAX_ROWS, random.randint(0, 6))
+        block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
         
     def clear_all(self):
         block.clear()
@@ -179,7 +180,7 @@ def redraw():
     grid_visuals.draw()
     
 grid_visuals = Grid(tf)
-block = Block(tf, MAX_COLS / 2, MAX_ROWS, random.randint(0, 6))
+block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
 redraw()
 
 while is_running:
