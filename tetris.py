@@ -108,6 +108,7 @@ class Game():
         
         if game_over:
             self.is_running = False
+            self.redraw()
             return
         
         self.check_lines()
@@ -119,7 +120,7 @@ class Game():
         self.grid_visuals.draw(self.grid)
         self.menu.draw(self.score, self.next_piece_id, self.is_running)
         if self.is_running: 
-            self. block.draw()
+            self.block.draw()
                 
     def reset(self):
         self.is_running = True
@@ -127,7 +128,6 @@ class Game():
         self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
         self.random_bag = []
         self.next_piece_id = None
-        self.block.clear_all()
         self.block = Block(tf, MAX_COLS // 2, MAX_ROWS, self.get_next_piece())
         self.redraw()
 
