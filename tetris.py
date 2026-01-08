@@ -70,7 +70,7 @@ class Game():
         self.block = Block(tf, MAX_COLS // 2, MAX_ROWS, self.get_next_piece())
         
     def check_lines(self):
-        for y in range(MAX_ROWS + 1):
+        for y in range(MAX_ROWS):
             is_full = True
             for x in range(MAX_COLS):
                 if self.grid[x][y] is None:
