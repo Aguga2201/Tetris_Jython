@@ -129,7 +129,7 @@ class Game():
         self.next_piece_id = None
         self.block.clear_all()
         self.block = Block(tf, MAX_COLS // 2, MAX_ROWS, self.get_next_piece())
-        redraw()
+        self.redraw()
 
 class Block(Turtle):
     def __init__(self, tf, x, y, shape):
@@ -220,7 +220,7 @@ class Grid(Turtle):
                 
         for x in range(MAX_COLS):
             for y in range(MAX_ROWS + SPAWN_ROWS):
-                if game.grid[x][y] is not None: 
+                if grid[x][y] is not None: 
                     self.setFillColor(COLORS[grid[x][y]])
                     world_x, world_y = grid_to_world_coords(x, y)
                     self.setPos(world_x, world_y)
