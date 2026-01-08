@@ -29,14 +29,10 @@ SCREEN_WIDTH = MAX_COLS * CELL_SIZE + 200
 SCREEN_HEIGHT = (MAX_ROWS + SPAWN_ROWS) * CELL_SIZE
 
 is_running = True
-score = 0
-grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
-random_bag = []
-next_piece_id = None
 
 def onMousePressed(e):
     if is_running:
-        block.rotate()
+        game.block.rotate()
         redraw()
     
 def onKeyPressed(e):
@@ -44,18 +40,18 @@ def onKeyPressed(e):
     
     if is_running:
         if e.getKeyCode() == e.VK_RIGHT:
-            block.move(1, 0)
+            game.block.move(1, 0)
         elif e.getKeyCode() == e.VK_LEFT:
-            block.move(-1, 0)
+            game.block.move(-1, 0)
         elif e.getKeyCode() == e.VK_UP:
-            block.rotate()
+            game.block.rotate()
         elif e.getKeyCode() == e.VK_DOWN:
-            block.move(0, -1)
+            game.block.move(0, -1)
         redraw()
     
     if e.getKeyCode() == 10:  # ENTER
         if not is_running:
-            reset_game()
+            game.reset()
 
 tf = TurtleFrame(mousePressed = onMousePressed, keyPressed = onKeyPressed)
 Options.setPlaygroundSize(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -65,50 +61,53 @@ def grid_to_world_coords(x, y):
     world_y = (y * CELL_SIZE) + -(SCREEN_HEIGHT/2)
     return (world_x, world_y)
 
-def get_next_piece():
-    global random_bag, next_piece_id
-    if len(random_bag) == 0:
-        random_bag = [0, 1, 2, 3, 4, 5, 6]
-        random.shuffle(random_bag)
-    
-    current_piece = next_piece_id if next_piece_id is not None else random_bag.pop()
-    next_piece_id = random_bag.pop()
-    return current_piece
-
-def check_lines():
-    global score
-    for y in range(MAX_ROWS + 1):
-        is_full = True
-        for x in range(MAX_COLS):
-            if grid[x][y] is None:
-                is_full = False
-                break
-            
-        if is_full:
-            score += 1
-            
-            for row_above in range(y, MAX_ROWS + 1):
-                for x in range(MAX_COLS):
-                    grid[x][row_above] = grid[x][row_above + 1]
+class Game():
+    def __init__(self):
+        self.score = 0
+        self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
+        self.random_bag = []
+        self.next_piece_id = None
+        
+        self.grid_visuals = Grid(tf)
+        self.game_menu = GameMenu(tf)
+        self.block = Block(tf, MAX_COLS // 2, MAX_ROWS, self.get_next_piece())
+        
+    def check_lines(self):
+        for y in range(MAX_ROWS + 1):
+            is_full = True
             for x in range(MAX_COLS):
-                grid[x][MAX_ROWS + 1] = None
-            
-            check_lines()
-
-def reset_game():
-    global is_running, score, grid, random_bag, block, next_piece_id
-    
-    is_running = True
-    score = 0
-    grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
-    random_bag = []
-    next_piece_id = None
-    
-    block.clear_all()
-    
-    block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
-    
-    redraw()
+                if self.grid[x][y] is None:
+                    is_full = False
+                    break
+                
+            if is_full:
+                self.score += 1
+                for row_above in range(y, MAX_ROWS + 1):
+                    for x in range(MAX_COLS):
+                        self.grid[x][row_above] = self.grid[x][row_above + 1]
+                for x in range(MAX_COLS):
+                    self.grid[x][MAX_ROWS + 1] = None
+                self.check_lines()
+                
+    def get_next_piece(self):
+        if len(self.random_bag) == 0:
+            self.random_bag = [0, 1, 2, 3, 4, 5, 6]
+            random.shuffle(self.random_bag)
+        
+        current_piece = self.next_piece_id if self.next_piece_id is not None else self.random_bag.pop()
+        self.next_piece_id = self.random_bag.pop()
+        return current_piece
+                
+    def reset(self):
+        global is_running
+        is_running = True
+        self.score = 0
+        self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
+        self.random_bag = []
+        self.next_piece_id = None
+        self.block.clear_all()
+        self.block = Block(tf, MAX_COLS // 2, MAX_ROWS, self.get_next_piece())
+        redraw()
 
 class Block(Turtle):
     def __init__(self, tf, x, y, shape):
@@ -143,7 +142,7 @@ class Block(Turtle):
             if target_grid_y < 0:
                 self.place()
                 return
-            if grid[target_grid_x][target_grid_y] is not None:
+            if game.grid[target_grid_x][target_grid_y] is not None:
                 if dy != 0:
                     self.place()
                 return
@@ -160,12 +159,11 @@ class Block(Turtle):
         self.shape = [(y, -x + offset) for (x, y) in self.shape]
         
     def place(self):
-        global block, is_running
-        
+        global is_running
         for shape_x, shape_y in self.shape:
             grid_x = self.px + shape_x
             grid_y = self.py + shape_y
-            grid[grid_x][grid_y] = self.color_id
+            game.grid[grid_x][grid_y] = self.color_id
             
             if grid_y + 1 > MAX_ROWS:
                 is_running = False
@@ -173,12 +171,17 @@ class Block(Turtle):
         if not is_running:
             redraw()
             return
-        check_lines()
-        block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
+        game.check_lines()
+        self.reset(game.get_next_piece())
         
-    def clear_all(self):
-        block.clear()
-        
+    def reset(self, shape_id):
+        self.px = MAX_COLS // 2
+        self.py = MAX_ROWS
+        self.shape_id = shape_id
+        self.shape = SHAPES[shape_id]
+        self.color_id = shape_id
+        self.setFillColor(COLORS[self.color_id])
+
 class Grid(Turtle):
     def __init__(self, tf):
         Turtle.__init__(self, tf)
@@ -194,14 +197,13 @@ class Grid(Turtle):
             for collumn in range(MAX_COLS + 1):
                 x = start_x + (collumn * CELL_SIZE)
                 y = start_y + (row * CELL_SIZE)
-            
                 self.setPos(x, y)
                 self.dot(5)
                 
         for x in range(MAX_COLS):
             for y in range(MAX_ROWS + SPAWN_ROWS):
-                if grid[x][y] is not None: 
-                    self.setFillColor(COLORS[grid[x][y]])
+                if game.grid[x][y] is not None: 
+                    self.setFillColor(COLORS[game.grid[x][y]])
                     world_x, world_y = grid_to_world_coords(x, y)
                     self.setPos(world_x, world_y)
                     self.setHeading(0)
@@ -220,14 +222,14 @@ class GameMenu(Turtle):
         
     def draw(self):
         self.setPos(SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 4)
-        self.label("Score: " + str(score))
+        self.label("Score: " + str(game.score))
         
         self.setPos(SCREEN_WIDTH / 2 - 160, SCREEN_HEIGHT / 6)
         self.label("Next piece:")
         
-        if next_piece_id is not None:
-            preview_shape = SHAPES[next_piece_id]
-            preview_color = COLORS[next_piece_id]
+        if game.next_piece_id is not None:
+            preview_shape = SHAPES[game.next_piece_id]
+            preview_color = COLORS[game.next_piece_id]
             self.setFillColor(preview_color)
             
             preview_scale = 25
@@ -237,7 +239,6 @@ class GameMenu(Turtle):
             for dx, dy in preview_shape: 
                 x = preview_center_x + (dx * preview_scale)
                 y = preview_center_y + (dy * preview_scale)
-                
                 self.setPos(x, y)
                 self.startPath()
                 for i in range(4):
@@ -252,20 +253,18 @@ class GameMenu(Turtle):
             self.label("ENTER to restart")
         
 def redraw():
-    block.clear_all()
+    tf.clear()
     
-    grid_visuals.draw()
+    game.grid_visuals.draw()
     if is_running: 
-        block.draw()
-    game_menu.draw()
+        game.block.draw()
+    game.game_menu.draw()
     
-grid_visuals = Grid(tf)
-block = Block(tf, MAX_COLS // 2, MAX_ROWS, get_next_piece())
-game_menu = GameMenu(tf)
+game = Game()
     
 while True:
     if not is_running:
         continue
     redraw()
     delay(500)
-    block.move(0, -1)
+    game.block.move(0, -1)
