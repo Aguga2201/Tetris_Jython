@@ -28,17 +28,13 @@ SPAWN_ROWS = 2
 SCREEN_WIDTH = MAX_COLS * CELL_SIZE + 200
 SCREEN_HEIGHT = (MAX_ROWS + SPAWN_ROWS) * CELL_SIZE
 
-is_running = True
-
 def onMousePressed(e):
-    if is_running:
+    if game.is_running:
         game.block.rotate()
         redraw()
     
 def onKeyPressed(e):
-    global is_running
-    
-    if is_running:
+    if game.is_running:
         if e.getKeyCode() == e.VK_RIGHT:
             game.block.move(1, 0)
         elif e.getKeyCode() == e.VK_LEFT:
@@ -50,7 +46,7 @@ def onKeyPressed(e):
         redraw()
     
     if e.getKeyCode() == 10:  # ENTER
-        if not is_running:
+        if not game.is_running:
             game.reset()
 
 tf = TurtleFrame(mousePressed = onMousePressed, keyPressed = onKeyPressed)
@@ -63,13 +59,14 @@ def grid_to_world_coords(x, y):
 
 class Game():
     def __init__(self):
+        self.is_running = True
         self.score = 0
         self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
         self.random_bag = []
         self.next_piece_id = None
         
         self.grid_visuals = Grid(tf)
-        self.game_menu = GameMenu(tf)
+        self.menu = GameMenu(tf)
         self.block = Block(tf, MAX_COLS // 2, MAX_ROWS, self.get_next_piece())
         
     def check_lines(self):
@@ -99,8 +96,7 @@ class Game():
         return current_piece
                 
     def reset(self):
-        global is_running
-        is_running = True
+        self.is_running = True
         self.score = 0
         self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
         self.random_bag = []
@@ -159,16 +155,15 @@ class Block(Turtle):
         self.shape = [(y, -x + offset) for (x, y) in self.shape]
         
     def place(self):
-        global is_running
         for shape_x, shape_y in self.shape:
             grid_x = self.px + shape_x
             grid_y = self.py + shape_y
             game.grid[grid_x][grid_y] = self.color_id
             
             if grid_y + 1 > MAX_ROWS:
-                is_running = False
+                game.is_running = False
                 
-        if not is_running:
+        if not game.is_running:
             redraw()
             return
         game.check_lines()
@@ -246,7 +241,7 @@ class GameMenu(Turtle):
                     self.right(90)
                 self.fillPath()
         
-        if is_running == False:
+        if game.is_running == False:
             self.setPos(SCREEN_WIDTH / 2 - 170, SCREEN_HEIGHT / 3)
             self.label("Game Over!")
             self.setPos(SCREEN_WIDTH / 2 - 190, SCREEN_HEIGHT / 3 - 30)
@@ -256,14 +251,14 @@ def redraw():
     tf.clear()
     
     game.grid_visuals.draw()
-    if is_running: 
+    if game.is_running: 
         game.block.draw()
-    game.game_menu.draw()
+    game.menu.draw()
     
 game = Game()
     
 while True:
-    if not is_running:
+    if not game.is_running:
         continue
     redraw()
     delay(500)
