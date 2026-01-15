@@ -49,8 +49,8 @@ def onKeyPressed(e):
         if not game.is_running:
             game.reset()
 
-tf = TurtleFrame(mousePressed = onMousePressed, keyPressed = onKeyPressed)
 Options.setPlaygroundSize(SCREEN_WIDTH, SCREEN_HEIGHT)
+tf = TurtleFrame(mousePressed = onMousePressed, keyPressed = onKeyPressed)
 
 def grid_to_world_coords(x, y):
     world_x = (x * CELL_SIZE) + -(SCREEN_WIDTH/2)
