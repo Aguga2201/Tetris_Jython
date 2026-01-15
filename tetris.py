@@ -28,8 +28,25 @@ SPAWN_ROWS = 2
 SCREEN_WIDTH = MAX_COLS * CELL_SIZE + 200
 SCREEN_HEIGHT = (MAX_ROWS + SPAWN_ROWS) * CELL_SIZE
 
+game_started = False
+
 def onMousePressed(e):
-    if game.is_running:
+    global game_started
+    
+    if not game_started:
+        mouse_x = e.getX() - SCREEN_WIDTH / 2
+        mouse_y =  SCREEN_HEIGHT / 2 - e.getY()
+        
+        button_x = -60
+        button_y = -40
+        button_width = 80
+        button_height = 30
+        
+        if (button_x <= mouse_x <= button_x + button_width and 
+            button_y <= mouse_y <= button_y + button_height):
+            game_started = True
+            
+    elif game.is_running:
         game.rotate_block()
         game.redraw()
     
@@ -119,7 +136,7 @@ class Game():
         
         self.grid_visuals.draw(self.grid)
         self.menu.draw(self.score, self.next_piece_id, self.is_running)
-        if self.is_running: 
+        if self.is_running:
             self.block.draw()
                 
     def reset(self):
@@ -173,7 +190,7 @@ class Block(Turtle):
         
     def rotate(self):
         offset = 0
-        if self.shape_id == 3: 
+        if self.shape_id == 3:
             offset = 1
         elif self.shape_id == 0:
             offset = -1
@@ -220,7 +237,7 @@ class Grid(Turtle):
                 
         for x in range(MAX_COLS):
             for y in range(MAX_ROWS + SPAWN_ROWS):
-                if grid[x][y] is not None: 
+                if grid[x][y] is not None:
                     self.setFillColor(COLORS[grid[x][y]])
                     world_x, world_y = grid_to_world_coords(x, y)
                     self.setPos(world_x, world_y)
@@ -254,7 +271,7 @@ class GameMenu(Turtle):
             preview_center_x = SCREEN_WIDTH / 2 - 125
             preview_center_y = SCREEN_HEIGHT / 6 - 100
             
-            for dx, dy in preview_shape: 
+            for dx, dy in preview_shape:
                 x = preview_center_x + (dx * preview_scale)
                 y = preview_center_y + (dy * preview_scale)
                 self.setPos(x, y)
@@ -269,6 +286,36 @@ class GameMenu(Turtle):
             self.label("Game Over!")
             self.setPos(SCREEN_WIDTH / 2 - 190, SCREEN_HEIGHT / 3 - 30)
             self.label("ENTER to restart")
+
+class StartMenu(Turtle):
+    def __init__(self, tf):
+        Turtle.__init__(self, tf)
+        self.hideTurtle()
+        self.setPenColor("black")
+        self.speed(-1)
+        
+    def draw(self):
+        self.setPos(-60, 100)
+        self.label("TETRIS")
+        
+        self.setPenColor("black")
+        self.setPos(-60, -40)
+        self.setHeading(0)
+        repeat 2:
+            self.forward(30)
+            self.right(90)
+            self.forward(80)
+            self.right(90)
+        
+        self.setPos(-50, -35)
+        self.label("PLAY")
+
+start_menu = StartMenu(tf)
+start_menu.draw()
+
+while not game_started:
+    delay(100)
+tf.clear()
     
 game = Game()
     
