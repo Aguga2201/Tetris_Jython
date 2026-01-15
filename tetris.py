@@ -51,6 +51,11 @@ def onMousePressed(e):
         game.redraw()
     
 def onKeyPressed(e):
+    if e.getKeyCode() == 27:  # ESC key
+        game.toggle_pause()
+        game.redraw()
+        return
+    
     if game.is_running:
         if e.getKeyCode() == e.VK_RIGHT:
             game.move_block(1, 0)
@@ -63,7 +68,7 @@ def onKeyPressed(e):
         game.redraw()
     
     if e.getKeyCode() == 10:  # ENTER
-        if not game.is_running:
+        if not game.is_running and game.game_over:
             game.reset()
 
 Options.setPlaygroundSize(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -77,6 +82,8 @@ def grid_to_world_coords(x, y):
 class Game():
     def __init__(self):
         self.is_running = True
+        self.is_paused = False
+        self.game_over = False
         self.score = 0
         self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
         self.random_bag = []
@@ -116,6 +123,11 @@ class Game():
         should_place = self.block.move(dx, dy, self.grid)
         if should_place:
             self.place_block()
+    
+    def toggle_pause(self):
+        if not self.game_over:
+            self.is_paused = not self.is_paused
+            self.is_running = not self.is_paused
         
     def rotate_block(self):
         self.block.rotate()
@@ -125,6 +137,7 @@ class Game():
         
         if game_over:
             self.is_running = False
+            self.game_over = True
             self.redraw()
             return
         
@@ -135,12 +148,14 @@ class Game():
         tf.clear()
         
         self.grid_visuals.draw(self.grid)
-        self.menu.draw(self.score, self.next_piece_id, self.is_running)
-        if self.is_running:
+        self.menu.draw(self.score, self.next_piece_id, self.is_running, self.is_paused, self.game_over)
+        if self.is_running or self.is_paused:
             self.block.draw()
                 
     def reset(self):
         self.is_running = True
+        self.is_paused = False
+        self.game_over = False
         self.score = 0
         self.grid = [[None for y in range(MAX_ROWS + SPAWN_ROWS)] for x in range(MAX_COLS)]
         self.random_bag = []
@@ -255,7 +270,7 @@ class GameMenu(Turtle):
         self.setPenColor("black")
         self.speed(-1)
         
-    def draw(self, score, next_piece_id, is_running):
+    def draw(self, score, next_piece_id, is_running, is_paused, game_over):
         self.setPos(SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 4)
         self.label("Score: " + str(score))
         
@@ -281,7 +296,12 @@ class GameMenu(Turtle):
                     self.right(90)
                 self.fillPath()
         
-        if not is_running:
+        if is_paused:
+            self.setPos(SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 3)
+            self.label("PAUSED")
+            self.setPos(SCREEN_WIDTH / 2 - 190, SCREEN_HEIGHT / 3 - 30)
+            self.label("ESC to resume")
+        elif game_over:
             self.setPos(SCREEN_WIDTH / 2 - 170, SCREEN_HEIGHT / 3)
             self.label("Game Over!")
             self.setPos(SCREEN_WIDTH / 2 - 190, SCREEN_HEIGHT / 3 - 30)
